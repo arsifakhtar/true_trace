@@ -1,0 +1,4 @@
+﻿Analyzing truetrace_app...                                      
+
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\home_screen.dart:64:46 - use_build_context_synchronously
+

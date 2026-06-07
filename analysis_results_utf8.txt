@@ -1,0 +1,15 @@
+﻿Analyzing truetrace_app...                                      
+
+warning - The include file 'package:flutter_lints/flutter.yaml' in 'C:\Users\user\Music\truetrace_app\analysis_options.yaml' can't be found when analyzing 'C:\Users\user\Music\truetrace_app' - analysis_options.yaml:10:10 - include_file_not_found
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\screens\device_registration_screen.dart:49:25 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\screens\device_registration_screen.dart:50:39 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\screens\device_registration_screen.dart:51:39 - invalid_null_aware_operator
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\device_registration_screen.dart:52:36 - dead_null_aware_expression
+warning - Unused import: 'package:flutter_reactive_ble/flutter_reactive_ble.dart' - lib\screens\finder_mode_screen.dart:4:8 - unused_import
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\home_screen.dart:34:29 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\home_screen.dart:35:43 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\home_screen.dart:36:43 - dead_null_aware_expression
+warning - The value of the local variable 'api' isn't used - lib\screens\lost_mode_screen.dart:75:11 - unused_local_variable
+warning - Unused import: 'dart:typed_data' - lib\services\ble_service.dart:5:8 - unused_import
+warning - Unused import: 'package:flutter/material.dart' - lib\services\fcm_service.dart:1:8 - unused_import
+

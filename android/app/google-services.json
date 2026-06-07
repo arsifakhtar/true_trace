@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "221053669302",
+    "project_id": "truetrace-5914d",
+    "storage_bucket": "truetrace-5914d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:221053669302:android:8145c9abcf482fb8d47b17",
+        "android_client_info": {
+          "package_name": "com.example.truetrace_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ_ZD7oqT2-RuUZdKoNmgU6P8IGa8O5jg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueTrace Backend Test Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        button,
+        select {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.danger {
+            background-color: #dc3545;
+        }
+
+        pre {
+            background: #eee;
+            padding: 10px;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-lost {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        #auth-section,
+        #dashboard-section {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>TrueTrace Backend Tester</h1>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-section" class="card">
+        <h2>🔐 Login</h2>
+        <p>Sign in to test authenticated endpoints.</p>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <button onclick="login()">Login</button>
+        <p id="auth-error" style="color: red;"></p>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboard-section">
+        <div class="card">
+            <h2>👤 User Info</h2>
+            <p><strong>UID:</strong> <span id="user-uid">-</span></p>
+            <p><strong>Token:</strong> <span id="id-token-preview">-</span>...</p>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="card">
+            <h2>📱 My Devices</h2>
+            <button onclick="fetchUserDevices()">Refresh List</button>
+            <div id="device-list" style="margin-top: 10px;">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h2>📱 Device Operations</h2>
+            <input type="text" id="device-id" placeholder="Enter Device ID (e.g. androidId)">
+
+            <h3>1. Get Status</h3>
+            <button onclick="getDeviceStatus()">Get Device Status</button>
+            <div id="status-result"></div>
+
+            <h3>2. Set Lost Mode</h3>
+            <select id="lost-mode-select">
+                <option value="true">Enable Lost Mode</option>
+                <option value="false">Disable Lost Mode (Found)</option>
+            </select>
+            <input type="text" id="lost-message" placeholder="Optional message (e.g. 'Call me!')">
+            <button class="danger" onclick="setLostMode()">Update Lost Mode</button>
+            <div id="lost-mode-result"></div>
+
+            <h3>3. Report Found (Finder Simulation)</h3>
+            <input type="text" id="device-token" placeholder="Device BLE Token">
+            <button onclick="reportFound()">Report Found</button>
+            <div id="found-result"></div>
+        </div>
+
+        <div class="card">
+            <h2>📡 API Response</h2>
+            <pre id="api-response">No request made yet.</pre>
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb-zS_90jUdX8vl6VMfkvOog8haOHfC9s",
+            authDomain: "truetrace-5914d.firebaseapp.com",
+            projectId: "truetrace-5914d",
+            storageBucket: "truetrace-5914d.firebasestorage.app",
+            messagingSenderId: "221053669302",
+            appId: "1:221053669302:web:bddc59851208526bd47b17",
+            measurementId: "G-X42JF3CGVJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        let idToken = "";
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById("auth-section").style.display = "none";
+                document.getElementById("dashboard-section").style.display = "block";
+                document.getElementById("user-uid").innerText = user.uid;
+
+                idToken = await user.getIdToken();
+                document.getElementById("id-token-preview").innerText = idToken.substring(0, 20);
+
+                fetchUserDevices();
+            } else {
+                document.getElementById("auth-section").style.display = "block";
+                document.getElementById("dashboard-section").style.display = "none";
+                idToken = "";
+            }
+        });
+
+        window.login = async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                document.getElementById("auth-error").innerText = error.message;
+            }
+        };
+
+        window.logout = () => signOut(auth);
+
+        async function callApi(endpoint, method = "GET", body = null) {
+            const responsePre = document.getElementById("api-response");
+            responsePre.innerText = "Loading...";
+
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${idToken}`
+                    }
+                };
+                if (body) options.body = JSON.stringify(body);
+
+                const res = await fetch(endpoint, options);
+
+                // Check if response is ok
+                if (!res.ok) {
+                    const text = await res.text();
+                    responsePre.innerText = `Error ${res.status}: ${text}`;
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        return null;
+                    }
+                }
+
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                    responsePre.innerText = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    responsePre.innerText = "Error parsing JSON: " + e.message + "\n\nRaw Response:\n" + text;
+                    return null;
+                }
+
+                // Update status result div if it's the status endpoint
+                if (endpoint.includes("/device-status/")) {
+                    const statusDiv = document.getElementById("status-result");
+                    if (data && !data.error) {
+                        statusDiv.innerHTML = `
+                            <div style="background:#e9ecef; padding:10px; border-radius:4px; margin-top:10px;">
+                                <p><strong>Status:</strong> ${data.status.toUpperCase()}</p>
+                                <p><strong>Lock Status:</strong> ${data.isLocked ? '🔒 Locked' : '🔓 Unlocked'}</p>
+                                <p><strong>Battery:</strong> ${data.batteryLevel}%</p>
+                                <p><strong>Last Seen:</strong> ${data.lastSeen || 'Never'}</p>
+                                <p><strong>Location:</strong> ${data.lastLocation ? JSON.stringify(data.lastLocation) : 'Unknown'}</p>
+                            </div>
+                        `;
+                    }
+                }
+                return data;
+
+            } catch (err) {
+                responsePre.innerText = "Network Error: " + err.message;
+                return null;
+            }
+        }
+
+        window.getDeviceStatus = async () => {
+            const deviceId = document.getElementById("device-id").value;
+            if (!deviceId) return alert("Enter Device ID");
+            await callApi(`/api/device-status/${deviceId}`);
+        };
+
+        window.setLostMode = async () => {
+            const deviceId = document.getElementById("device-id").value;
+            const isLost = document.getElementById("lost-mode-select").value === "true";
+            const message = document.getElementById("lost-message").value;
+            if (!deviceId) return alert("Enter Device ID");
+            await callApi("/api/set-lost", "POST", { deviceId, isLost, message });
+        };
+
+        window.reportFound = async () => {
+            const deviceToken = document.getElementById("device-token").value;
+            if (!deviceToken) return alert("Enter Device Token");
+            await callApi("/api/found", "POST", {
+                deviceToken,
+                message: "Found via Web Dashboard",
+                finderLocation: { lat: 0, lng: 0 }
+            });
+        };
+
+        window.fetchUserDevices = async () => {
+            const listDiv = document.getElementById("device-list");
+            listDiv.innerHTML = "Fetching...";
+
+            const data = await callApi("/api/devices");
+            if (data && data.devices) {
+                if (data.devices.length === 0) {
+                    listDiv.innerHTML = "<p>No devices found.</p>";
+                    return;
+                }
+
+                let html = "<table style='width:100%; border-collapse: collapse;'>";
+                html += "<tr style='background:#eee; text-align:left;'><th>Model</th><th>Status</th><th>Action</th></tr>";
+
+                data.devices.forEach(dev => {
+                    const statusClass = dev.status === 'lost' ? 'status-lost' : 'status-active';
+                    html += `
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <td style="padding:8px;">${dev.model || 'Unknown'} <br><small style="color:#666">${dev.id}</small></td>
+                            <td style="padding:8px;"><span class="status-badge ${statusClass}">${dev.status}</span></td>
+                            <td style="padding:8px;">
+                                <button style="padding:4px 8px; font-size:0.8em;" onclick="selectDevice('${dev.id}', '${dev.deviceToken || ''}')">Select</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += "</table>";
+                listDiv.innerHTML = html;
+            } else {
+                listDiv.innerHTML = "<p style='color:red'>Failed to load devices.</p>";
+            }
+        };
+
+        window.selectDevice = (id, token) => {
+            document.getElementById("device-id").value = id;
+            if (token) document.getElementById("device-token").value = token;
+            document.getElementById("device-id").scrollIntoView({ behavior: "smooth" });
+        };
+
+    </script>
+</body>
+
+</html>
